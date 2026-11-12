@@ -28,7 +28,7 @@
   --tegaki:"Klee One","Klee","YuKyokasho Yoko","YuKyokasho","UD Digi Kyokasho NK-B","UD Digi Kyokasho N-B","UD デジタル 教科書体 NK-B","Hiragino Maru Gothic ProN","Yu Gothic","YuGothic","Noto Sans CJK JP","Noto Sans JP",sans-serif;
   --hon:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans CJK JP","Noto Sans JP",Meiryo,sans-serif;
   --ta:.1576;            /* 題字の画像の 幅÷高さ */
-  --rest:388px;          /* 写真より下、「参加する」の下の一文までの高さ */
+  --rest:470px;          /* 写真より下、「参加する」の下の一文までの高さ */
   --bar:0px;             /* おためしモードの帯の高さ */
   color-scheme:dark;
 }
@@ -80,7 +80,7 @@ button{cursor:pointer}
   height:var(--G);
 }
 @supports (height:1svh){
-  .gate{--G:clamp(150px,calc(100svh - var(--rest) - var(--bar)),320px)}
+  .gate{--G:clamp(118px,calc(100svh - var(--rest) - var(--bar)),300px)}
   body[data-view="meibo"] .gate{--G:clamp(150px,27svh,210px)}
 }
 .eda{ /* チョークで描いた桜の枝 */
@@ -115,38 +115,61 @@ button{cursor:pointer}
 .tcy{text-combine-upright:all;-webkit-text-combine:horizontal}
 
 /* ---------- 黒板に書いた文字 ---------- */
-.naka{position:relative;z-index:1;width:100%;max-width:540px;margin:0 auto;padding:12px 18px 0;display:flex;flex-direction:column;gap:11px}
-.lead{align-self:flex-start;font-size:clamp(15px,4.6vw,21px);line-height:1.5;padding-bottom:9px;
+.naka{position:relative;z-index:1;width:100%;max-width:540px;margin:0 auto;padding:10px 18px 0;display:flex;flex-direction:column;gap:10px}
+.lead{align-self:flex-start;font-size:clamp(15px,4.6vw,21px);line-height:1.45;padding-bottom:8px;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='7' viewBox='0 0 60 7'%3E%3Cpath d='M0 4Q7.5 .5 15 4T30 4T45 4T60 4' fill='none' stroke='%23f7b2c6' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E") left bottom/60px 7px repeat-x}
 .lead span{display:inline-block}
 .uketa{font-size:20px;line-height:1.5}
 
-.nichiji{display:flex;align-items:baseline;gap:10px;font-size:16.5px;line-height:1.55}
-.fuda{flex:none;font-size:12.5px;line-height:1;padding:4px 7px 3px;border:1.5px solid var(--usu);border-radius:3px;color:var(--usu)}
-.nichiji b{font-weight:600;min-width:0;overflow-wrap:anywhere}
-.kanji-note{margin-top:5px;font-size:14px;line-height:1.6;color:var(--usu);white-space:pre-wrap;overflow-wrap:anywhere}
+/* 掲示(日時・会場・会費) */
+.keiji-list{margin:0;display:flex;flex-direction:column;gap:3px}
+.keiji-list > div{display:flex;align-items:baseline;gap:10px;font-size:16px;line-height:1.42}
+.keiji-list dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.keiji-list dd small{font-size:.82em;color:var(--usu);margin-left:2px}
+.fuda{flex:none;font-size:12px;line-height:1;padding:4px 6px 3px;border:1.5px solid var(--usu);border-radius:3px;color:var(--usu);position:relative;top:-1px}
+.kanji-note{margin-top:6px;font-size:14px;line-height:1.6;color:var(--usu);white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* 締め切りまでの残り時間 */
+.shimekiri{
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;
+  padding:6px 12px 7px;border:1.5px dashed rgba(247,178,198,.75);border-radius:5px;
+  background:rgba(247,178,198,.06);
+}
+.sk-hi{display:flex;flex-wrap:wrap;gap:0 8px;align-items:baseline;font-size:12.5px;line-height:1.4;color:var(--usu);min-width:0}
+.sk-hi #skDate{color:var(--haku);font-size:13.5px}
+.sk-nokori{display:flex;align-items:baseline;gap:3px;flex:none;color:var(--ki);line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sk-nokori .ato{font-size:13px;color:var(--usu);margin-right:3px}
+.sk-nokori b{font-weight:600;font-size:23px}
+.sk-nokori i{font-style:normal;font-size:13px;margin-right:4px}
+.sk-nokori .byo{font-size:16px;color:rgba(246,226,146,.8);min-width:1.3em;text-align:right}
+.shimekiri.isogi{border-color:var(--momo);background:rgba(247,178,198,.12)}
+.shimekiri.isogi .sk-nokori{color:var(--momo)}
+.shimekiri.owari{border-style:solid;border-color:var(--kasure);background:none}
+.shimekiri.owari .sk-nokori{color:var(--usu);font-size:15px}
 
 /* 人数と正の字 */
-.ninzu-row{display:flex;align-items:baseline;gap:12px;line-height:1}
+.ninzu-row{display:flex;align-items:center;gap:6px 12px;line-height:1;flex-wrap:wrap}
+.ninzu-label{align-self:center}
 .ninzu-label{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;color:var(--usu)}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--momo);flex:none}
 .live-dot.off{background:rgba(246,243,234,.3)}
 .ninzu-num{display:inline-flex;align-items:baseline;gap:3px;color:var(--ki)}
-#countNum{font-weight:600;font-size:40px;font-variant-numeric:tabular-nums;display:inline-block;min-width:.6em}
+#countNum{font-weight:600;font-size:36px;font-variant-numeric:tabular-nums;display:inline-block;min-width:.6em}
 .ninzu-num .mei{font-size:18px}
 .ninzu-note{font-size:13.5px;color:var(--usu);margin-top:6px;line-height:1.6}
-.tally{display:flex;flex-wrap:wrap;gap:6px 8px;margin-top:8px}
-.tally svg{width:23px;height:23px;display:block;overflow:visible}
-.tally[data-size="m"]{gap:5px 6px}.tally[data-size="m"] svg{width:15px;height:15px}
+.tally{display:flex;flex-wrap:wrap;gap:5px 7px;flex:1 1 90px;min-width:90px}
+.ninzu-row .tally:empty,.ninzu-row .tally[hidden]{display:none}
+.tally svg{width:20px;height:20px;display:block;overflow:visible}
+.tally[data-size="m"]{gap:4px 5px}.tally[data-size="m"] svg{width:13px;height:13px}
 .tally path{fill:none;stroke:var(--haku);stroke-width:2.6;stroke-linecap:round;opacity:.94}
 .tally path.ghost{stroke:rgba(246,243,234,.16);stroke-width:2}
 
 /* 入力 */
-.field label{display:block;font-size:15px;line-height:1.5;margin-bottom:5px}
+.field label{display:block;font-size:15px;line-height:1.45;margin-bottom:4px}
 .field label small{font-size:13.5px;color:var(--usu);margin-left:4px}
 .chalk-input{
-  display:block;width:100%;height:54px;padding:0 14px;
-  font-weight:600;font-size:21px;letter-spacing:.06em;color:var(--haku);caret-color:var(--ki);
+  display:block;width:100%;height:50px;padding:0 14px;
+  font-weight:600;font-size:20px;letter-spacing:.06em;color:var(--haku);caret-color:var(--ki);
   background:rgba(255,255,255,.045);border:2px solid var(--haku);border-radius:4px;
   box-shadow:0 0 0 1px rgba(246,243,234,.1),inset 0 0 14px rgba(255,255,255,.035);
   transition:box-shadow .15s,border-color .15s;
@@ -156,7 +179,7 @@ button{cursor:pointer}
 .chalk-input[aria-invalid="true"]{border-color:var(--momo)}
 .err{font-size:14px;color:var(--ki);margin-top:6px;line-height:1.6}
 .join-btn{
-  display:block;width:100%;height:58px;margin-top:12px;
+  display:block;width:100%;height:54px;margin-top:10px;
   color:#1b3a31;border:0;border-radius:4px;
   font-weight:600;font-size:22px;letter-spacing:.34em;text-indent:.34em;
   background:
@@ -168,7 +191,7 @@ button{cursor:pointer}
 .join-btn:hover{filter:brightness(1.06)}
 .join-btn:active{transform:translateY(1px)}
 .join-btn:disabled{opacity:.6;cursor:progress}
-.shikumi{font-size:13.5px;line-height:1.6;color:var(--usu);margin-top:9px}
+.shikumi{font-size:13px;line-height:1.5;color:var(--usu);margin-top:7px}
 .closed{font-size:17px;padding:8px 0}
 
 /* ---------- 名簿画面 ---------- */
@@ -298,6 +321,16 @@ dialog#admin :focus-visible{outline-color:#2f6bd8}
 }
 
 /* ---------- 画面の低いスマホ: 桜の枝をはずして写真を広く ---------- */
+@media (max-height:620px) and (max-width:979px){
+  .naka{gap:8px;padding-top:8px}
+  .lead{font-size:clamp(14px,4.3vw,18px);padding-bottom:7px}
+  .keiji-list > div{font-size:15px;line-height:1.38}
+  #countNum{font-size:32px}
+  .chalk-input{height:46px;font-size:19px}
+  .join-btn{height:50px;margin-top:8px;font-size:21px}
+  .field label{font-size:14px;margin-bottom:3px}
+  .shikumi{margin-top:6px}
+}
 @media (max-height:600px) and (max-width:979px){
   .gate{--pt:12px}
   .eda{display:none}
@@ -328,8 +361,13 @@ dialog#admin :focus-visible{outline-color:#2f6bd8}
   .naka{grid-column:2;grid-row:1 / span 2;max-width:none;margin:0;padding:14px 0 0;gap:20px}
   .lead{font-size:24px}
   .uketa{font-size:24px}
-  .nichiji{font-size:18px}
-  #countNum{font-size:54px}
+  .keiji-list > div{font-size:18px}
+  .keiji-list{gap:7px}
+  .fuda{font-size:13px}
+  .sk-nokori b{font-size:30px}
+  .sk-hi{font-size:13.5px}.sk-hi #skDate{font-size:15px}
+  .shimekiri{padding:10px 16px}
+  #countNum{font-size:50px}
   .ninzu-num .mei{font-size:21px}
   .tally{margin-top:12px}
   .tally svg{width:27px;height:27px}
@@ -415,18 +453,27 @@ dialog#admin :focus-visible{outline-color:#2f6bd8}
         </form>
       </div>
 
-      <div id="eventBlock" hidden>
-        <p class="nichiji" id="evDateRow"><span class="fuda">日時</span><b id="evDate"></b></p>
+      <div class="keiji" id="eventBlock">
+        <dl class="keiji-list">
+          <div id="evDateRow"><dt class="fuda">日時</dt><dd id="evDate"></dd></div>
+          <div id="evPlaceRow"><dt class="fuda">会場</dt><dd id="evPlace"></dd></div>
+          <div id="evFeeRow"><dt class="fuda">会費</dt><dd id="evFee"></dd></div>
+        </dl>
         <p class="kanji-note" id="evNote" hidden></p>
       </div>
 
       <div class="ninzu">
-        <p class="ninzu-row">
+        <div class="ninzu-row">
           <span class="ninzu-label"><span class="live-dot off" id="liveDot"></span><span id="ninzuLabel">ただいまの参加者</span></span>
           <span class="ninzu-num" aria-live="polite"><span id="countNum">–</span><span class="mei">名</span></span>
-        </p>
-        <div class="tally" id="tally" aria-hidden="true"></div>
+          <div class="tally" id="tally" aria-hidden="true"></div>
+        </div>
         <p class="ninzu-note" id="ninzuNote" hidden></p>
+      </div>
+
+      <div class="shimekiri" id="shimekiri" hidden>
+        <p class="sk-hi"><span class="sk-label">受付の締め切り</span><span id="skDate"></span></p>
+        <p class="sk-nokori" id="skNokori" aria-live="off"></p>
       </div>
 
       <form class="uketsuke" id="joinForm" novalidate>
@@ -439,7 +486,7 @@ dialog#admin :focus-visible{outline-color:#2f6bd8}
         <p class="shikumi">参加を押すと誰が参加するかを確認できます。</p>
       </form>
 
-      <p class="closed" id="closedMsg" hidden>参加の受付は終了しました。ありがとうございました。</p>
+      <p class="closed" id="closedMsg" hidden>参加の受付は締め切りました。ありがとうございました。</p>
 
       <ol class="minna-list" id="minnaList" hidden></ol>
       <p class="minna-msg" id="minnaMsg" hidden></p>
@@ -492,10 +539,13 @@ dialog#admin :focus-visible{outline-color:#2f6bd8}
       </div>
 
       <form class="ad-form" id="paneEvent" novalidate hidden>
-        <div class="ad-field"><label for="fDate">日時</label><input id="fDate" type="text" maxlength="60" placeholder="2027年1月2日(土)18時から"></div>
+        <div class="ad-field"><label for="fDate">日時</label><input id="fDate" type="text" maxlength="60"></div>
+        <div class="ad-field"><label for="fPlace">会場</label><input id="fPlace" type="text" maxlength="80"></div>
+        <div class="ad-field"><label for="fFee">会費</label><input id="fFee" type="text" maxlength="40"></div>
+        <div class="ad-field"><label for="fDeadline">受付の締め切り(日本時間)</label><input id="fDeadline" type="datetime-local"><small>この時刻をすぎると、名前の入力と「参加する」ボタンが自動で消えます。</small></div>
         <div class="ad-field"><label for="fSub">卒業年度など</label><input id="fSub" type="text" maxlength="24" placeholder="平成10年度卒業生"><small>題字の横に、黄色いチョークで小さく書き添えます。</small></div>
         <div class="ad-field"><label for="fNote">ひとこと</label><textarea id="fNote" maxlength="300"></textarea><small>空のままにした項目は、参加者の画面に出ません。</small></div>
-        <label class="check"><input id="fClosed" type="checkbox"><span>受付を終了する<small>チェックすると、名前の入力と「参加する」ボタンが消えます。</small></span></label>
+        <label class="check"><input id="fClosed" type="checkbox"><span>いますぐ受付を終了する<small>締め切りの前でも、名前の入力と「参加する」ボタンを消します。</small></span></label>
         <div><button class="btn solid" id="adSave" type="submit">保存する</button></div>
       </form>
 
@@ -528,6 +578,14 @@ const KANRI_MAIL = 'kanji@example.com';
 const KANRI_HEAD = 'minami';
 const DEMO_PASS = '4545';
 
+/* 同窓会の内容(管理ページの「お知らせ設定」で書きかえると、そちらが優先されます) */
+const KIHON = {
+  date: '2027年1月10日(日) 18時〜20時',
+  place: 'ミトラファースト または Vala KIERO',
+  fee: '1人 4,000円〜5,000円',
+  deadline: '2026-11-15T23:59'   // 受付の締め切り(日本時間)。この分の終わりまで受け付けます
+};
+
 (() => {
 'use strict';
 const $ = (s, r) => (r || document).querySelector(s);
@@ -558,7 +616,7 @@ function makeDemoStore() {
   if (!uid) { uid = 'u' + rid(); try { localStorage.setItem(UID_KEY, uid); } catch (e) {} }
   const seed = () => ({
     list: SAMPLE.map((name, i) => ({ id: 's' + i, name, at: Date.now() - (SAMPLE.length - i) * 5.3 * 3600e3 })),
-    event: { sub: '', date: '(見本)2027年1月2日(土)18時から', note: '', closed: false }
+    event: {}
   });
   const read = () => {
     try { const v = JSON.parse(localStorage.getItem(KEY)); if (v && Array.isArray(v.list)) return v; } catch (e) {}
@@ -697,6 +755,7 @@ function showCount(n) {
   if (changed) { countNum.classList.remove('tick'); void countNum.offsetWidth; countNum.classList.add('tick'); }
   drawTally(n);
   shown = n;
+  fitGate();
   ninzuNote.hidden = n !== 0;
   if (n === 0) ninzuNote.textContent = '最初のひとりになりませんか。';
   syncAdminWarn();
@@ -718,18 +777,83 @@ function tcy(node, text) { // 縦書きの中の1〜2けたの数字を横にな
     else node.appendChild(document.createTextNode(part));
   });
 }
+const val = k => { const v = cleanText(eventInfo[k]); return v || KIHON[k] || ''; };
+// "2026-11-15T23:59" を日本時間として読み、その1分後(=締め切りの瞬間)を返す
+function deadlineAt() {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(val('deadline'));
+  return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5] + 1) : null;
+}
+const YOUBI = '日月火水木金土';
+function fmtDeadline() {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(val('deadline')); if (!m) return '';
+  const w = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay();
+  return `${+m[2]}月${+m[3]}日(${YOUBI[w]}) ${m[4]}:${m[5]}まで`;
+}
+const isPastDeadline = () => { const t = deadlineAt(); return t !== null && Date.now() >= t; };
+function setText(row, el2, text) { $(row).hidden = !text; $(el2).textContent = text; }
 function showEvent(ev) {
   eventInfo = ev || {};
   const sub = cleanText(eventInfo.sub);
   $('#kanbanSub').hidden = !sub; if (sub) tcy($('#kanbanSub'), sub);
   $('#gate').classList.toggle('has-sub', !!sub);
-  const date = cleanText(eventInfo.date);
-  $('#evDateRow').hidden = !date; $('#evDate').textContent = date;
+  setText('#evDateRow', '#evDate', val('date'));
+  setText('#evPlaceRow', '#evPlace', val('place'));
+  setText('#evFeeRow', '#evFee', val('fee'));
   const note = String(eventInfo.note || '').trim();
   $('#evNote').hidden = !note; $('#evNote').textContent = note;
-  $('#eventBlock').hidden = !(date || note);
+  $('#eventBlock').hidden = !(val('date') || val('place') || val('fee') || note);
+  wasPast = isPastDeadline();
   renderView();
+  tickDeadline();
   fillEventForm();
+}
+
+/* ---------------- スマホ: 写真の高さを画面に合わせて、「参加する」まで1画面に収める ---------------- */
+let fitRaf = 0;
+function fitGate() {
+  cancelAnimationFrame(fitRaf);
+  fitRaf = requestAnimationFrame(() => {
+    const gate = $('#gate');
+    if (window.innerWidth >= 980 || document.body.dataset.view !== 'uketsuke') { gate.style.removeProperty('--G'); return; }
+    const last = !form.hidden ? $('.shikumi') : (!closedMsg.hidden ? closedMsg : null);
+    if (!last) { gate.style.removeProperty('--G'); return; }
+    const g = gate.getBoundingClientRect(), b = last.getBoundingClientRect();
+    const below = b.bottom - g.bottom;                 // 写真より下の高さ(写真の高さでは変わらない)
+    const avail = window.innerHeight - (g.top + window.scrollY) - below - 6;
+    const G = Math.max(104, Math.min(300, Math.floor(avail)));
+    gate.style.setProperty('--G', G + 'px');
+  });
+}
+window.addEventListener('resize', fitGate);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitGate);
+
+/* ---------------- 締め切りまでの残り時間(1秒ごとに書きかえる) ---------------- */
+let wasPast = false, skTimer = 0;
+function tickDeadline() {
+  clearTimeout(skTimer);
+  const box = $('#shimekiri'), t = deadlineAt();
+  const show = t !== null && !me && !eventInfo.closed;
+  box.hidden = !show;
+  if (t === null) return;
+  const past = Date.now() >= t;
+  if (past !== wasPast) { wasPast = past; renderView(); }
+  if (!show) { if (!past) skTimer = setTimeout(tickDeadline, 1000); return; }
+  $('#skDate').textContent = fmtDeadline();
+  const out = $('#skNokori'); out.textContent = '';
+  box.classList.toggle('owari', past);
+  if (past) { box.classList.remove('isogi'); out.textContent = '締め切りました'; return; }
+  let s2 = Math.floor((t - Date.now()) / 1000);
+  const d = Math.floor(s2 / 86400); s2 -= d * 86400;
+  const h = Math.floor(s2 / 3600); s2 -= h * 3600;
+  const mi = Math.floor(s2 / 60), se = s2 - mi * 60;
+  box.classList.toggle('isogi', d === 0);
+  out.appendChild(el('span', 'ato', 'あと'));
+  if (d > 0) { out.appendChild(el('b', '', String(d))); out.appendChild(el('i', '', '日')); }
+  out.appendChild(el('b', '', String(h))); out.appendChild(el('i', '', '時間'));
+  out.appendChild(el('b', '', pad2(mi))); out.appendChild(el('i', '', '分'));
+  out.appendChild(el('span', 'byo', pad2(se))); out.appendChild(el('i', '', '秒'));
+  box.setAttribute('aria-label', `受付の締め切りまで あと${d ? d + '日' : ''}${h}時間${mi}分`);
+  skTimer = setTimeout(tickDeadline, 1000 - (Date.now() % 1000) + 20);
 }
 
 /* ---------------- 名前の一覧(参加した人と管理者だけが読みこむ) ---------------- */
@@ -771,7 +895,7 @@ let editing = false;
 
 function showErr(msg) { nameErr.textContent = msg; nameErr.hidden = !msg; input.setAttribute('aria-invalid', msg ? 'true' : 'false'); }
 function renderView() {
-  const closed = !!eventInfo.closed, joined = !!me;
+  const closed = !!eventInfo.closed || isPastDeadline(), joined = !!me;
   document.body.dataset.view = joined ? 'meibo' : 'uketsuke';
   $('#lead').hidden = joined;
   $('#uketa').hidden = !joined;
@@ -783,8 +907,10 @@ function renderView() {
     $('#myName').textContent = me.name;
     $('#anataShow').hidden = editing; $('#editForm').hidden = !editing; $('#anata').classList.toggle('editing', editing);
   }
+  $('#shimekiri').hidden = joined || !!eventInfo.closed || deadlineAt() === null;
   syncNames();
   renderMinna();
+  fitGate();
 }
 function goMeibo() { // 参加した直後: 名簿画面へ
   const naka = $('#naka');
@@ -802,6 +928,7 @@ function goMeibo() { // 参加した直後: 名簿画面へ
 form.addEventListener('submit', async e => {
   e.preventDefault();
   if (joinBtn.disabled || me) return;
+  if (isPastDeadline()) { renderView(); tickDeadline(); return; }
   const name = cleanName(input.value);
   if (!validName(name)) { showErr('お名前をフルネームで入力してください。'); input.focus(); return; }
   showErr('');
@@ -1052,10 +1179,10 @@ $('#adAdd').addEventListener('submit', async e => {
   catch (err) { console.error(err); toast('追加できませんでした'); }
 });
 
-const EV_FIELDS = [['date', 'fDate'], ['sub', 'fSub'], ['note', 'fNote']];
+const EV_FIELDS = [['date', 'fDate'], ['place', 'fPlace'], ['fee', 'fFee'], ['deadline', 'fDeadline'], ['sub', 'fSub'], ['note', 'fNote']];
 function fillEventForm() {
   if (eventFormDirty) return;
-  EV_FIELDS.forEach(([k, id]) => { $('#' + id).value = eventInfo[k] || ''; });
+  EV_FIELDS.forEach(([k, id]) => { $('#' + id).value = (k in KIHON ? val(k) : eventInfo[k] || '').slice(0, k === 'deadline' ? 16 : 300); });
   $('#fClosed').checked = !!eventInfo.closed;
 }
 $('#paneEvent').addEventListener('input', () => { eventFormDirty = true; });
@@ -1070,7 +1197,9 @@ $('#paneEvent').addEventListener('submit', async e => {
 });
 
 /* ---------------- はじまり ---------------- */
+wasPast = isPastDeadline();
 renderView();
+tickDeadline();
 const loadTimer = setTimeout(() => { if (shown === null) showCountError(); }, 12000);
 storeReady.then(s => {
   store = s;
