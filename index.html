@@ -592,12 +592,9 @@ const firebaseConfig = {
 };
 /* ▲▲▲ ここまで ▲▲▲ */
 
-/* 管理ページのパスワードは「4545」。
-   Firebase は6文字以上のパスワードしか作れないので、アプリが前に「minami」をつけて送ります。
-   Firebase には  メール: kanji@example.com / パスワード: minami4545  のユーザーを1人作っておきます。 */
-const KANRI_MAIL = 'kanji@example.com';
-const KANRI_HEAD = 'minami';
-const DEMO_PASS = '4545';
+/* 管理ページのパスワードは、Firebase の「ルール」の中に書いてあります(いまは 4545)。
+   このファイルには書いていないので、ページのしくみを見てもパスワードは分かりません。 */
+const DEMO_PASS = '4545';   // おためしモード(Firebase未設定)のときだけ使う
 
 /* 同窓会の内容(管理ページの「お知らせ設定」で書きかえると、そちらが優先されます) */
 const KIHON = {
@@ -694,9 +691,12 @@ async function makeFirebaseStore(cfg) {
   // この端末の「合い札」。参加を押したときに、名前なしの匿名ログインで1つもらう
   const authReady = auth.authStateReady ? auth.authStateReady() : new Promise(res => { const off = A.onAuthStateChanged(auth, () => { off(); res(); }); });
   const myUid = async create => { await authReady; if (!auth.currentUser && create) await A.signInAnonymously(auth); return auth.currentUser ? auth.currentUser.uid : null; };
-  // 管理者のログインは別わくにして、この端末の合い札を上書きしないようにする
-  let kanri = null;
-  const K = () => { if (!kanri) { const a = appMod.initializeApp(cfg, 'kanri'); kanri = { auth: A.getAuth(a), db: F.getFirestore(a) }; } return kanri; };
+  // 管理の操作: 同じ書き込みの中で kanri/op に入力されたパスワードを書く。ルールが正しいか確かめる
+  const opRef = F.doc(db, 'kanri', 'op');
+  let kanriPass = null; const kanriSubs = new Set();
+  const setKanri = p => { kanriPass = p; kanriSubs.forEach(f => f(p ? {} : null)); };
+  const withPass = tx => tx.set(opRef, { pass: kanriPass, t: F.serverTimestamp() });
+  const kanriTx = fn => { if (!kanriPass) return Promise.reject(Object.assign(new Error('not signed in'), { code: 'permission-denied' })); return F.runTransaction(db, async tx => { await fn(tx); withPass(tx); }); };
   return {
     demo: false,
     onCount: (cb, onErr) => F.onSnapshot(countRef, s => cb(num(s)), onErr),
@@ -724,15 +724,19 @@ async function makeFirebaseStore(cfg) {
     },
     rename: (id, name) => F.updateDoc(F.doc(people, id), { name }),
     admin: {
-      onAuth: cb => A.onAuthStateChanged(K().auth, u => cb(u && u.email === KANRI_MAIL ? {} : null)),
-      signIn: pass => A.signInWithEmailAndPassword(K().auth, KANRI_MAIL, KANRI_HEAD + pass),
-      signOut: () => A.signOut(K().auth),
-      add: name => { const d = K().db, ref = F.doc(F.collection(d, 'attendees')), c = F.doc(d, 'stats', 'count');
-        return F.runTransaction(d, async tx => { const s = await tx.get(c); tx.set(ref, { name, at: F.serverTimestamp() }); tx.set(c, { n: num(s) + 1, last: ref.id }); }); },
-      remove: id => { const d = K().db, c = F.doc(d, 'stats', 'count');
-        return F.runTransaction(d, async tx => { const s = await tx.get(c); tx.delete(F.doc(d, 'attendees', id)); tx.set(c, { n: Math.max(0, num(s) - 1) }, { merge: true }); }); },
-      saveEvent: ev => F.setDoc(F.doc(K().db, 'config', 'event'), ev),
-      fixCount: n => F.setDoc(F.doc(K().db, 'stats', 'count'), { n }, { merge: true })
+      onAuth: cb => { kanriSubs.add(cb); cb(kanriPass ? {} : null); return () => kanriSubs.delete(cb); },
+      // パスワードが合っているかは、kanri/op に書けるかどうかで確かめる(合っていないとルールが断る)
+      signIn: async pass => {
+        try { await F.setDoc(opRef, { pass: String(pass), t: F.serverTimestamp() }); }
+        catch (e) { if (e && e.code === 'permission-denied') throw Object.assign(new Error('wrong'), { code: 'auth/invalid-credential' }); throw e; }
+        setKanri(String(pass));
+      },
+      signOut: async () => setKanri(null),
+      add: name => { const ref = F.doc(people), c = countRef;
+        return kanriTx(async tx => { const s = await tx.get(c); tx.set(ref, { name, at: F.serverTimestamp() }); tx.set(c, { n: num(s) + 1, last: ref.id }); }); },
+      remove: id => kanriTx(async tx => { const s = await tx.get(countRef); tx.delete(F.doc(people, id)); tx.set(countRef, { n: Math.max(0, num(s) - 1), last: (s.exists() && s.data().last) || '' }); }),
+      saveEvent: ev => kanriTx(async tx => { tx.set(eventRef, ev); }),
+      fixCount: n => kanriTx(async tx => { const s = await tx.get(countRef); tx.set(countRef, { n, last: (s.exists() && s.data().last) || '' }); })
     }
   };
 }
@@ -1160,8 +1164,8 @@ $('#adLogin').addEventListener('submit', async e => {
   catch (err) {
     const c = (err && err.code) || '';
     adErr(c === 'auth/too-many-requests' ? '何度もまちがえたため、いまはログインできません。少し時間をおいてください。'
-      : c === 'auth/network-request-failed' || !c ? 'つながりませんでした。電波のよい場所でもう一度お試しください。'
-      : 'パスワードが違います。');
+      : c === 'auth/invalid-credential' ? 'パスワードが違います。'
+      : 'つながりませんでした。電波のよい場所でもう一度お試しください。');
   } finally { btn.disabled = false; }
 });
 $('#adLogout').addEventListener('click', () => { if (!store) return; adErr(''); store.admin.signOut().catch(() => {}); });
