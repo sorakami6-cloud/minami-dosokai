@@ -317,6 +317,9 @@ dialog#admin :focus-visible{outline-color:#2f6bd8}
 .meibo .acts{display:flex;gap:8px}
 .meibo .acts .btn{min-height:38px;padding:0 12px;font-size:13.5px}
 .meibo li.asking{background:#fff5f4}
+.meibo li.editing{background:#f2f7f3}
+.ad-edit{display:block;width:100%;min-height:42px;padding:6px 10px;background:#fff;color:var(--sumi);border:1.5px solid var(--sumi);border-radius:4px;font-family:var(--tegaki);font-weight:600;font-size:18px}
+.ad-edit:focus{outline:none;box-shadow:0 0 0 4px rgba(47,107,216,.22)}
 .ad-empty{padding:26px 0;color:var(--usuzumi);font-size:15px}
 .ad-form{display:flex;flex-direction:column;gap:18px;max-width:520px}
 .check{display:flex;gap:12px;align-items:flex-start;font-weight:700}
@@ -527,7 +530,7 @@ dialog#admin :focus-visible{outline-color:#2f6bd8}
   <div class="ad-body">
     <p class="ad-empty" id="adLoading">読みこんでいます。</p>
     <form class="ad-login" id="adLogin" novalidate hidden>
-      <p>管理者だけが入れます。名簿に人を追加する、名前を消す、日時を決める、ができます。</p>
+      <p>管理者だけが入れます。名簿に人を追加する、名前を直す・消す、日時を決める、ができます。</p>
       <div class="ad-field"><label for="adPass">パスワード</label><input id="adPass" type="password" inputmode="numeric" autocomplete="off" maxlength="12"></div>
       <p class="ad-err" id="adLoginErr" role="alert" hidden></p>
       <button class="btn solid" id="adLoginBtn" type="submit">ログイン</button>
@@ -670,6 +673,7 @@ function makeDemoStore() {
       signIn: async pass => { if (pass !== DEMO_PASS) throw badPass(); setAuth(true); },
       signOut: async () => { setAuth(false); },
       add: async name => { const v = read(); v.list.push({ id: 'k' + rid(), name, at: Date.now() }); write(v); },
+      rename: async (id, name) => { const v = read(); const x = v.list.find(x => x.id === id); if (!x) throw new Error('gone'); x.name = name; write(v); },
       remove: async id => { const v = read(); v.list = v.list.filter(x => x.id !== id); write(v); },
       saveEvent: async ev => { const v = read(); v.event = ev; write(v); },
       fixCount: async () => {}
@@ -735,6 +739,7 @@ async function makeFirebaseStore(cfg) {
       add: name => { const ref = F.doc(people), c = countRef;
         return kanriTx(async tx => { const s = await tx.get(c); tx.set(ref, { name, at: F.serverTimestamp() }); tx.set(c, { n: num(s) + 1, last: ref.id }); }); },
       remove: id => kanriTx(async tx => { const s = await tx.get(countRef); tx.delete(F.doc(people, id)); tx.set(countRef, { n: Math.max(0, num(s) - 1), last: (s.exists() && s.data().last) || '' }); }),
+      rename: (id, name) => kanriTx(async tx => { tx.update(F.doc(people, id), { name }); }),
       saveEvent: ev => kanriTx(async tx => { tx.set(eventRef, ev); }),
       fixCount: n => kanriTx(async tx => { const s = await tx.get(countRef); tx.set(countRef, { n, last: (s.exists() && s.data().last) || '' }); })
     }
@@ -1069,7 +1074,7 @@ const petals = (() => {
 
 /* ---------------- 管理ページ(管理者だけ: 追加・削除・日時の設定) ---------------- */
 const dlg = $('#admin');
-let authKnown = false, authStarted = false, filterText = '', askingId = null, eventFormDirty = false;
+let authKnown = false, authStarted = false, filterText = '', askingId = null, editingId = null, eventFormDirty = false;
 let toastTimer = 0;
 function toast(msg) {
   const old = $('.toast'); if (old) old.remove(); clearTimeout(toastTimer);
@@ -1100,7 +1105,7 @@ function renderAdmin() {
   const inside = !!adminUser;
   $('#adLogin').hidden = inside;
   $('#adMain').hidden = !inside;
-  if (!inside) { askingId = null; $('#adList').textContent = ''; return; }
+  if (!inside) { askingId = null; editingId = null; $('#adList').textContent = ''; return; }
   $('#adWho').textContent = store.demo ? 'おためしモード' : '';
   renderList();
 }
@@ -1113,6 +1118,7 @@ function syncAdminWarn() {
 }
 function renderList() {
   const ol = $('#adList'), empty = $('#adEmpty');
+  const openEd = ol.querySelector('input.ad-edit'), keep = openEd ? openEd.value : null;
   if (!adminUser) { ol.textContent = ''; return; }
   if (!names) { ol.textContent = ''; empty.hidden = false; empty.textContent = namesErr ? '名簿を読みこめませんでした。ページを開き直してください。' : '名簿を読みこんでいます。'; return; }
   $('#adCount').textContent = String(names.length);
@@ -1129,7 +1135,28 @@ function renderList() {
     if (seen[nameKey(x.name)] > 1) b.appendChild(el('span', 'dup', '同じ名前あり'));
     who.appendChild(b); who.appendChild(el('small', '', x.at ? fmtTime(x.at) + ' に受付' : '')); li.appendChild(who);
     const acts = el('span', 'acts');
-    if (askingId === x.id) {
+    if (editingId === x.id) {
+      li.className = 'editing';
+      who.textContent = '';
+      const inp = el('input'); inp.type = 'text'; inp.maxLength = 40; inp.value = x.name; inp.className = 'ad-edit';
+      inp.setAttribute('aria-label', x.name + ' の新しい名前');
+      who.appendChild(inp);
+      const save = el('button', 'btn solid', '保存'); save.type = 'button';
+      const doSave = async () => {
+        const name = cleanName(inp.value);
+        if (!validName(name)) { toast('フルネームを入力してください'); inp.focus(); return; }
+        if (name === x.name) { editingId = null; renderList(); return; }
+        save.disabled = true;
+        try { await store.admin.rename(x.id, name); editingId = null; toast('名前を直しました'); renderList(); }
+        catch (e) { console.error(e); save.disabled = false; toast('直せませんでした'); }
+      };
+      save.addEventListener('click', doSave);
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doSave(); } if (e.key === 'Escape') { editingId = null; renderList(); } });
+      const no = el('button', 'btn', 'やめる'); no.type = 'button';
+      no.addEventListener('click', () => { editingId = null; renderList(); });
+      acts.appendChild(save); acts.appendChild(no);
+      setTimeout(() => { inp.focus(); try { inp.select(); } catch (e) {} }, 0);
+    } else if (askingId === x.id) {
       li.className = 'asking';
       const yes = el('button', 'btn danger solid', '削除する'); yes.type = 'button';
       yes.addEventListener('click', async () => {
@@ -1141,12 +1168,15 @@ function renderList() {
       no.addEventListener('click', () => { askingId = null; renderList(); });
       acts.appendChild(yes); acts.appendChild(no);
     } else {
+      const ed = el('button', 'btn', '直す'); ed.type = 'button'; ed.setAttribute('aria-label', x.name + ' の名前を直す');
+      ed.addEventListener('click', () => { editingId = x.id; askingId = null; renderList(); });
       const del = el('button', 'btn', '削除'); del.type = 'button'; del.setAttribute('aria-label', x.name + ' を削除');
-      del.addEventListener('click', () => { askingId = x.id; renderList(); });
-      acts.appendChild(del);
+      del.addEventListener('click', () => { askingId = x.id; editingId = null; renderList(); });
+      acts.appendChild(ed); acts.appendChild(del);
     }
     li.appendChild(acts); ol.appendChild(li);
   });
+  const newEd = ol.querySelector('input.ad-edit'); if (newEd && keep !== null) newEd.value = keep;
   empty.hidden = rows > 0;
   if (!rows) empty.textContent = names.length ? '「' + filterText + '」に合う名前はありません。' : 'まだ参加者はいません。このページのURLを同窓生に送ると、ここに名前が並びます。';
   syncAdminWarn();
