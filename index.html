@@ -135,7 +135,7 @@ button{cursor:pointer}
 .keiji-list{margin:0;display:flex;flex-direction:column;gap:3px}
 .keiji-list > div{display:flex;align-items:baseline;gap:10px;font-size:16px;line-height:1.42}
 .keiji-list dd{margin:0;min-width:0;overflow-wrap:anywhere}
-.keiji-list dd small{font-size:.82em;color:var(--usu);margin-left:2px}
+.keiji-list dd small{font-size:.78em;color:var(--usu);margin-left:5px;white-space:nowrap}
 .fuda{flex:none;font-size:12px;line-height:1;padding:4px 6px 3px;border:1.5px solid var(--usu);border-radius:3px;color:var(--usu);position:relative;top:-1px}
 .kanji-note{margin-top:6px;font-size:14px;line-height:1.6;color:var(--usu);white-space:pre-wrap;overflow-wrap:anywhere}
 
@@ -344,6 +344,17 @@ dialog#admin :focus-visible{outline-color:#2f6bd8}
 @media (max-height:600px) and (max-width:979px){
   .gate{--pt:12px}
   .eda{display:none}
+}
+
+/* ---------- 幅のせまいスマホ(320px前後): 1行に収める ---------- */
+@media (max-width:345px){
+  .naka{padding-left:14px;padding-right:14px}
+  .keiji-list > div{font-size:13.5px;gap:7px}
+  .keiji-list dd{white-space:nowrap}
+  .keiji-list dd small{margin-left:3px;font-size:.8em}
+  .ninzu-label{font-size:13px;gap:6px}
+  .tally{min-width:70px;flex-basis:70px}
+  .tally svg{width:17px;height:17px}
 }
 
 /* ---------- PC: 壁に掛けた黒板 ---------- */
@@ -593,6 +604,7 @@ const KIHON = {
   date: '2027年1月10日(日) 18時〜20時',
   place: 'ミトラファースト または Vala KIERO',
   fee: '1人 4,000円〜5,000円',
+  feeNote: '(食べ飲み放題)',   // 会費の横に小さく書き添える
   deadline: '2026-11-15T23:59'   // 受付の締め切り(日本時間)。この分の終わりまで受け付けます
 };
 
@@ -809,6 +821,7 @@ function showEvent(ev) {
   setText('#evDateRow', '#evDate', val('date'));
   setText('#evPlaceRow', '#evPlace', val('place'));
   setText('#evFeeRow', '#evFee', val('fee'));
+  if (val('fee') && KIHON.feeNote) $('#evFee').appendChild(el('small', '', KIHON.feeNote));
   const note = String(eventInfo.note || '').trim();
   $('#evNote').hidden = !note; $('#evNote').textContent = note;
   $('#eventBlock').hidden = !(val('date') || val('place') || val('fee') || note);
